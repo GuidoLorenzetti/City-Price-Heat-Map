@@ -1,16 +1,16 @@
 import numpy as np
 import csv
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 def pos(r,l,lat,dist_hor):
   x = -1
   i = r
   while i < l:
-    if lat > i and lat < (i - dist_hor):
-      return x
-    i = i - dist_hor
     x += 1
+    if float(lat) > i and float(lat) < (i - dist_hor):
+      break
+    i -= dist_hor
+  return x
 
 lat_izq = 55.733342
 lat_der = 55.614935
@@ -30,23 +30,18 @@ with open('listings.csv', newline='') as File:
     for row in reader:
         if row[0] == "id":
           continue
-        x = pos (lat_der,lat_izq,float(row[6]),dist_hor)
-        y = pos (long_arr,long_ab,float(row[7]),dist_ver)
-        cant[(x, y)] += 1
-        precio[(x, y)] += float(row[9])
+        x = pos (lat_der,lat_izq,row[6],dist_hor)
+        y = pos (long_arr,long_ab,row[7],dist_ver)
+        cant[((x-1),(y-1))] += 1
+        precio[((x-1),(y-1))] += float(row[9])
 
 for l in range(inter):
   for m in range (inter):
     if cant[(l, m)] != 0:
       precio_prom[(l, m)] = precio[(l, m)] / cant[(l, m)]
 
-for l in range(inter):
-      print(precio_prom[(l, 24)])
-
-
 figure, axes = plt.subplots()
-precio_prom = axes.pcolormesh(precio_prom, cmap='inferno', vmin=0, vmax=2000)
+precio_prom = axes.pcolormesh(precio_prom, cmap='hot', vmin=0, vmax=2000)
 axes.set_title('Copenhagen Heat Map')
 figure.colorbar(precio_prom)
-#inferno
 plt.show()

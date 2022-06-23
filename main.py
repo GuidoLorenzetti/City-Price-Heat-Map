@@ -2,14 +2,14 @@ import numpy as np
 import csv
 import matplotlib.pyplot as plt
 
-def pos(r,l,lat,dist_hor):
+def pos(r,l,lat,dist):
   x = -1
   i = r
   while i < l:
     x += 1
-    if float(lat) > i and float(lat) < (i + dist_hor):
+    if float(lat) > i and float(lat) < (i + dist):
       break
-    i += dist_hor
+    i += dist
   return x
 
 def lat_long(reader,inter):
@@ -33,39 +33,38 @@ def lat_long(reader,inter):
         if float(row[7]) > u:
           u = float(row[7])
       cont += 1
-  dist_hor = abs((r - l) / inter)
-  dist_ver = abs((u - d) / inter)
+  dist_hor = int(abs((r - l) / inter))
+  dist_ver = int(abs((u - d) / inter))
   return (r,l,u,d,dist_hor,dist_ver)
 
-inter = 200
-
-cant = np.zeros((inter, inter))
-precio = np.zeros((inter, inter))
-precio_prom = np.zeros((inter, inter))
-cont = 0
+long=0.001
 
 with open('listings.csv', newline='') as File:
     reader = csv.reader(File)
-    r,l,d,u,dist_hor,dist_ver = lat_long(reader,inter)
-
+    r,l,d,u,dist_hor,dist_ver = lat_long(reader,long)
+    cant = np.zeros((dist_hor,dist_ver))
+    price = np.zeros((dist_hor,dist_ver))
+    price_prom = np.zeros((dist_hor,dist_ver))
+  
 with open('listings.csv', newline='') as File:
     reader = csv.reader(File)
     for row in reader:
       if row[0] == "id":
         continue
-      x = pos (r,l,row[6],dist_hor)
-      y = pos (u,d,row[7],dist_ver)
+      x = pos (r,l,row[6],long)
+      y = pos (u,d,row[7],long)
       cant[((x-1),(y-1))] += 1
-      precio[((x-1),(y-1))] += float(row[9])
-      cont += 1
+      price[((x-1),(y-1))] += float(row[9])
 
-for l in range(inter):
-  for m in range (inter):
+for l in range(dist_hor):
+  for m in range (dist_ver):
     if cant[(l, m)] != 0:
-      precio_prom[(l, m)] = precio[(l, m)] / cant[(l, m)]
+      price_prom[(l, m)] = price[(l, m)] / cant[(l, m)]
 
 figure, axes = plt.subplots()
-precio_prom = axes.pcolormesh(precio_prom, cmap='hot', vmin=0, vmax=2000)
+map = axes.pcolormesh(price_prom, cmap='hot', vmin=0, vmax=2000)
 axes.set_title('Heat Map')
-figure.colorbar(precio_prom)
+plt.axis('off')
+cbar = figure.colorbar(map)
+cbar.ax.tick_params(size=0)
 plt.show()
